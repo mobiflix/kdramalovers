@@ -60,7 +60,9 @@
       const season = params.get('season') || '';
       const episode = params.get('episode') || '';
 
-      // ✅ BAGONG PLAYER URLS
+      // ============================================================
+      // ✅ PLAYER URLS
+      // ============================================================
       const MOVIE_BASE = 'https://vidstuck.xyz/embed/movie/';
       const TV_BASE = 'https://vidstuck.xyz/embed/tv/';
 
@@ -76,17 +78,80 @@
         embedURL = `${MOVIE_BASE}${id}`;
       }
 
-      // Auto-play params
+      // ============================================================
+      // ✅ SUBTITLE + AUTOPLAY PARAMETERS
+      // Sinusubukan lahat ng posibleng param names para tumaas
+      // ang chance na may suportahan ang embed player.
+      // ============================================================
+      const subtitleParams = [
+        'autoplay=1',
+        'autoPlay=1',
+        'muted=0',
+        'playsinline=1',
+        'subtitle=en',
+        'subtitle=en_US',
+        'sub_lang=en',
+        'sub=en',
+        'lang=en',
+        'cc=1',
+        'cc_lang=en',
+        'sub=1',
+        'caption=en',
+        'captions=1',
+        'default_subtitle=en'
+      ];
+
       const separator = embedURL.includes('?') ? '&' : '?';
-      embedURL = embedURL + separator + 'autoplay=1&autoPlay=1&muted=0&playsinline=1';
+      embedURL = embedURL + separator + subtitleParams.join('&');
 
       const frame = document.getElementById('player-frame');
       frame.src = embedURL;
 
+      // ============================================================
+      // ✅ POSTMESSAGE COMMANDS
+      // Ipinapadala sa iframe para subukang i-enable ang subtitles
+      // sa loob ng player (kung sinusuportahan nito).
+      // ============================================================
+      function sendSubtitleCommands() {
+        try {
+          const commands = [
+            { type: 'setSubtitle', lang: 'en', enabled: true },
+            { type: 'subtitle', enabled: true, lang: 'en' },
+            { type: 'enableSubtitle', lang: 'en' },
+            { type: 'setSubtitleTrack', lang: 'en' },
+            { type: 'subtitleTrack', lang: 'en' },
+            { type: 'cc', enabled: true, lang: 'en' },
+            { type: 'captions', enabled: true, lang: 'en' },
+            { event: 'subtitle', action: 'enable', lang: 'en' },
+            { event: 'cc', action: 'on', lang: 'en' },
+            { action: 'setSubtitle', language: 'en' },
+            { action: 'setLanguage', language: 'en' },
+            { type: 'play' },
+            { event: 'play' },
+            { action: 'play' }
+          ];
+
+          commands.forEach(function(cmd) {
+            try {
+              frame.contentWindow.postMessage(cmd, '*');
+            } catch (e) {}
+          });
+        } catch (e) {
+          console.warn('[Player] postMessage error:', e);
+        }
+      }
+
+      // Ipadala pagkatapos mag-load
       frame.addEventListener('load', function() {
         setTimeout(function() {
           document.getElementById('loading-overlay').classList.add('hidden');
         }, 600);
+
+        sendSubtitleCommands();
+
+        setTimeout(sendSubtitleCommands, 1500);
+        setTimeout(sendSubtitleCommands, 3000);
+        setTimeout(sendSubtitleCommands, 5000);
       });
 
       // Fallback: itago ang loading pagkatapos ng 4 seconds
@@ -94,17 +159,36 @@
         document.getElementById('loading-overlay').classList.add('hidden');
       }, 4000);
 
-      // Subukang mag-send ng play command sa iframe
-      frame.addEventListener('load', function() {
-        try {
-          frame.contentWindow.postMessage({ type: 'play' }, '*');
-        } catch (e) {}
+      // ============================================================
+      // ✅ MESSAGE LISTENER
+      // Nakikinig sa response ng iframe.
+      // ============================================================
+      window.addEventListener('message', function(event) {
+        const data = event.data;
+        if (!data) return;
+        if (typeof data === 'object') {
+          if (data.type === 'subtitle' || data.type === 'cc' || data.subtitle) {
+            console.log('[Player] Subtitle response:', data);
+          }
+          if (data.event === 'ready' || data.type === 'ready') {
+            sendSubtitleCommands();
+          }
+        }
       });
 
-      // I-lock sa landscape kung mobile
+      // ============================================================
+      // ✅ LANDSCAPE LOCK (mobile)
+      // ============================================================
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(function() {});
       }
+
+      // ============================================================
+      // ✅ DEBUG LOGS
+      // ============================================================
+      console.log('[MobiFlix Player] Embed URL:', embedURL);
+      console.log('[MobiFlix Player] Type:', type, '| ID:', id,
+                  season ? '| S' + season + 'E' + episode : '');
     })();
   </script>
 </body>
