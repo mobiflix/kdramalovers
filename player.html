@@ -110,7 +110,11 @@
         embedURL = `${MOVIE_BASE}${id}`;
       }
 
-      const subtitleParams = [
+      // === BRANDING PARAMETERS ===
+      const brandingParams = [
+        'branding=MobiFlix',
+        'loading=1',
+        'back=true',
         'autoplay=1',
         'muted=0',
         'playsinline=1',
@@ -125,7 +129,7 @@
       ];
 
       const separator = embedURL.includes('?') ? '&' : '?';
-      embedURL = embedURL + separator + subtitleParams.join('&');
+      embedURL = embedURL + separator + brandingParams.join('&');
 
       const frame = document.getElementById('player-frame');
       frame.src = embedURL;
