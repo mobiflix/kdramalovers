@@ -204,7 +204,7 @@ body {
 }
 
 .hero-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-.hero-rating { color: #f5c518; font-size: 16px; font-weight: 600; }
+.hero-rating { color: #f5c518; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
 .hero-year { color: #ccc; font-size: 15px; }
 .hero-type {
   background: #e50914; color: #fff;
@@ -347,21 +347,68 @@ body {
 .horizontal-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 .horizontal-scroll::-webkit-scrollbar-thumb:hover { background: #e50914; }
 
-.horizontal-scroll img {
-  width: 180px;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 10px;
-  cursor: pointer;
+/* ===== POSTER WRAPPER + STAR RATING (nasa LOOB ng poster) ===== */
+.poster-wrapper {
+  position: relative;
   flex-shrink: 0;
-  transition: all 0.35s cubic-bezier(0.2, 0, 0, 1);
+  width: 180px;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.35s;
+  border-radius: 10px;
+  overflow: hidden;
   background: #1a1a1a;
   box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  /* ✅ GPU acceleration para smooth ang hover at scroll */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
-.horizontal-scroll img:hover {
+
+.poster-wrapper img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
+  background: #1a1a1a;
+  content-visibility: auto;
+}
+
+.poster-wrapper:hover {
   transform: scale(1.08) translateY(-6px);
   box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 40px rgba(229,9,20,0.25);
   z-index: 5;
+}
+
+/* ✅ Rating badge sa loob ng poster (ibabang kaliwang corner) */
+.poster-rating {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.75);
+  color: #f5c518;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 3;
+}
+.poster-rating .fa-star {
+  font-size: 11px;
+  color: #f5c518;
+}
+.poster-rating .rating-number {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 /* ===== TOP 10 ROW ===== */
@@ -399,14 +446,21 @@ body {
   pointer-events: none;
 }
 
-.top10-item img {
+.top10-poster-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  z-index: 2;
+}
+
+.top10-poster-wrap img {
   width: 140px;
   aspect-ratio: 2/3;
   object-fit: cover;
+  display: block;
   border-radius: 8px;
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
 }
 
 /* ===== STREAMING PROVIDERS ROW ===== */
@@ -476,6 +530,49 @@ body {
   text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
+/* ===== VIVAMAX PROVIDER CARD — original logo style (asul + orange) ===== */
+.provider-card-vivamax {
+  background: #000 !important;
+  border-color: #ff6a00 !important;
+  position: relative;
+  overflow: hidden;
+}
+.provider-card-vivamax::before {
+  background: linear-gradient(135deg, rgba(255,106,0,0.15), transparent);
+}
+.provider-card-vivamax:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 30px rgba(255,106,0,0.5) !important;
+  border-color: #ff6a00 !important;
+}
+
+.vivamax-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  font-family: 'Harabara Mais', 'Arial Black', 'Segoe UI', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.vivamax-viva {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0028ff;
+  text-shadow: 0 2px 12px rgba(0,40,255,0.6);
+}
+
+.vivamax-max {
+  font-size: 22px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff6a00 0%, #ffaa00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 12px rgba(255,106,0,0.5);
+}
+
 /* ===== FULL PAGES ===== */
 .view-all-page,
 .my-list-page,
@@ -529,7 +626,7 @@ body {
 }
 .back-btn:hover { background: #e50914; border-color: #e50914; }
 
-/* ===== FIXED BACK BUTTON (DETAILS + TRAILER) ===== */
+/* ===== FIXED BACK BUTTON ===== */
 .fixed-back-btn {
   position: fixed !important;
   top: 16px !important;
@@ -567,18 +664,12 @@ body {
   gap: 16px;
 }
 
-.view-all-grid img,
-.my-list-grid img {
+.view-all-grid .poster-wrapper,
+.my-list-grid .poster-wrapper {
   width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-  background: #1a1a1a;
 }
-.view-all-grid img:hover,
-.my-list-grid img:hover {
+.view-all-grid .poster-wrapper:hover,
+.my-list-grid .poster-wrapper:hover {
   transform: scale(1.05);
   box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 30px rgba(229,9,20,0.2);
 }
@@ -634,13 +725,10 @@ body {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 16px; width: 100%;
 }
-.search-modal .results img {
-  width: 100%; aspect-ratio: 2 / 3;
-  object-fit: cover; border-radius: 8px;
-  cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
-  background: #1a1a1a;
+.search-modal .results .poster-wrapper {
+  width: 100%;
 }
-.search-modal .results img:hover {
+.search-modal .results .poster-wrapper:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 30px rgba(229,9,20,0.2);
 }
@@ -762,7 +850,6 @@ body {
   transform: scale(1.02);
 }
 
-/* ===== TRAILER BUTTON ===== */
 .btn-trailer {
   flex: 1;
   max-width: 220px;
@@ -902,7 +989,6 @@ body {
   50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
 }
 
-/* ===== SEASONS INFO BAR ===== */
 .seasons-info {
   background: rgba(229, 9, 20, 0.1);
   border: 1px solid rgba(229, 9, 20, 0.3);
@@ -922,7 +1008,6 @@ body {
   font-weight: 700;
 }
 
-/* ===== EPISODES SUMMARY ===== */
 .episodes-summary {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1041,7 +1126,6 @@ body {
   font-size: 14px;
 }
 
-/* ===== EPISODE PROGRESS ===== */
 .episode-item.watched::after {
   content: '✓';
   position: absolute;
@@ -1275,23 +1359,16 @@ body {
   color: #e50914;
 }
 
-/* Watch History Grid */
 .history-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
-.history-grid img {
+.history-grid .poster-wrapper {
   width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: pointer;
-  background: #1a1a1a;
-  transition: transform 0.3s, box-shadow 0.3s;
 }
-.history-grid img:hover {
+.history-grid .poster-wrapper:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 30px rgba(229,9,20,0.3);
 }
@@ -1331,7 +1408,6 @@ body {
   color: #fff;
 }
 
-/* Themes */
 .theme-options {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1393,7 +1469,6 @@ body {
   color: #fff;
 }
 
-/* Notification Toggle */
 .switch-row {
   display: flex;
   justify-content: space-between;
@@ -1444,7 +1519,6 @@ body {
   left: 23px;
 }
 
-/* Logout Button */
 .profile-logout-btn {
   width: 100%;
   padding: 16px;
@@ -1944,6 +2018,17 @@ body.theme-light .more-list a:hover {
   background: rgba(0,0,0,0.04);
 }
 
+body.theme-light .poster-rating {
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+body.theme-light .poster-rating .fa-star {
+  color: #f5c518;
+}
+body.theme-light .poster-rating .rating-number {
+  color: #222;
+}
+
 /* ===== THEME VARIATIONS ===== */
 body.theme-blue {
   background: #0a0e1a;
@@ -2333,19 +2418,24 @@ body.locked #snow-container {
   .view-all-btn { font-size: 12px; padding: 5px 12px; }
 
   .horizontal-scroll { gap: 10px; }
-  .horizontal-scroll img { width: 130px; }
+
+  .poster-wrapper { width: 130px; }
+  .poster-rating { font-size: 10px; padding: 3px 6px; gap: 3px; bottom: 6px; left: 6px; }
+  .poster-rating .fa-star { font-size: 10px; }
+  .poster-rating .rating-number { font-size: 10px; }
 
   .continue-card { width: 180px; }
   .continue-title { font-size: 12px; }
 
   .top10-number { font-size: 80px; -webkit-text-stroke: 2px #555; letter-spacing: -5px; }
-  .top10-item img { width: 105px; }
+  .top10-poster-wrap img { width: 105px; }
 
   .view-all-grid, .my-list-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .search-modal .results { grid-template-columns: repeat(4, 1fr); gap: 10px; }
 
   .providers-row h2 { font-size: 18px; }
   .provider-card { width: 130px; height: 75px; padding: 12px; }
+  .vivamax-viva, .vivamax-max { font-size: 18px; }
 
   .view-all-page, .my-list-page, .more-page, .user-profile-page, .search-modal {
     padding: 0 16px 140px 16px;
@@ -2435,6 +2525,20 @@ body.locked #snow-container {
     height: 48px;
     font-size: 23px;
   }
+
+  /* ✅ Mobile: bawasan ang heavy animations */
+  .poster-wrapper:hover {
+    transform: scale(1.03) translateY(-3px);
+  }
+  .top10-item:hover {
+    transform: scale(1.04);
+  }
+  .provider-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+  .snowflake {
+    animation-duration: 15s !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2447,8 +2551,9 @@ body.locked #snow-container {
   .view-all-grid, .my-list-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .search-modal .results { grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .provider-card { width: 110px; height: 65px; padding: 10px; }
+  .vivamax-viva, .vivamax-max { font-size: 15px; }
   .top10-number { font-size: 64px; letter-spacing: -4px; }
-  .top10-item img { width: 88px; }
+  .top10-poster-wrap img { width: 88px; }
   .login-box { padding: 32px 24px; }
   .login-logo { font-size: 26px; }
   .login-box h2 { font-size: 20px; }
@@ -2469,6 +2574,11 @@ body.locked #snow-container {
   .continue-card { width: 150px; }
   .continue-title { font-size: 11px; }
   .continue-subtitle { font-size: 10px; }
+
+  .poster-wrapper { width: 110px; }
+  .poster-rating { font-size: 9px; padding: 3px 5px; gap: 3px; bottom: 5px; left: 5px; backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(0,0,0,0.85); }
+  .poster-rating .fa-star { font-size: 9px; }
+  .poster-rating .rating-number { font-size: 9px; }
 
   .telegram-float {
     right: 12px;
