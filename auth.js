@@ -1,5 +1,5 @@
 // ============================================
-//   MOBIFLIX LOGIN SYSTEM
+//   MOBIFLIX LOGIN SYSTEM — OPTIMIZED v2
 //   Palitan mo lang yung USERS array para
 //   magdagdag / magpalit ng username & password
 // ============================================
@@ -21,6 +21,16 @@ const SESSION_HOURS = 6;
 
 const AUTH_KEY = 'mobiflix_auth_session';
 const AUTH_TIME_KEY = 'mobiflix_auth_time';
+
+// ✅ Cache keys na kailangan i-clear sa logout
+const CACHE_KEYS_TO_CLEAR = [
+  'mobiflix_home_cache',
+  'mobiflix_notif_last_gen',
+  'mobiflix_notifications',
+  'mobiflix_continue_watching',
+  'mobiflix_watch_history',
+  'mobiflix_episode_progress'
+];
 
 function isLoggedIn() {
   const session = localStorage.getItem(AUTH_KEY);
@@ -56,6 +66,15 @@ function login(username, password) {
 function logout() {
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(AUTH_TIME_KEY);
+
+  // ✅ Clear cached content para walang luma content sa ibang user
+  CACHE_KEYS_TO_CLEAR.forEach(function(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  });
+
+  console.log('[MobiFlix] ✅ Logged out, cache cleared');
 }
 
 function showLoginScreen() {

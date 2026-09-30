@@ -1,3 +1,15 @@
+// ============================================================
+// MOBIFLIX HOME.JS — OPTIMIZED v2
+// ============================================================
+// ✅ Performance optimizations:
+//   - Home content cache (10 min sa localStorage)
+//   - Notification refresh (1 oras lang, hindi every refresh)
+//   - API cache TTL 30 min (dating 5 min)
+//   - Smart refresh (skip kung fresh pa)
+//   - Clear cache sa logout
+//   - Provider batch optimization
+// ============================================================
+
 const API_KEY = 'e0a7266a5d0e95c36475f349d8bc0a5a';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
@@ -8,12 +20,21 @@ const IMG_PROFILE = 'https://image.tmdb.org/t/p/w185';
 
 const VIVAMAX_COMPANY_ID = '149142';
 
+// ============================================================
+// ✅ CACHE KEYS & TTL
+// ============================================================
 const HISTORY_KEY = 'mobiflix_watch_history';
 const THEME_KEY = 'mobiflix_theme';
 const NOTIF_KEY = 'mobiflix_notifications';
 const NOTIF_ENABLED_KEY = 'mobiflix_notif_enabled';
+const NOTIF_LAST_GEN_KEY = 'mobiflix_notif_last_gen';
 const CONTINUE_KEY = 'mobiflix_continue_watching';
 const EPISODE_PROGRESS_KEY = 'mobiflix_episode_progress';
+const HOME_CACHE_KEY = 'mobiflix_home_cache';
+const HOME_CACHE_TTL = 10 * 60 * 1000; // ✅ 10 minuto
+const NOTIF_REFRESH_TTL = 60 * 60 * 1000; // ✅ 1 oras
+const CACHE_TTL = 30 * 60 * 1000; // ✅ 30 minuto (dating 5 min)
+
 const MAX_HISTORY = 30;
 const MAX_CONTINUE = 10;
 
@@ -24,7 +45,6 @@ const BANNED_GENRES_TV = [10764, 10767, 10763, 10766, 10402, 99, 10768, 16, 1076
 const KOREAN_EXCLUDE_GENRES = [10764, 10767, 10763, 10766, 16, 10762];
 const KIDS_BANNED_GENRES = [10762];
 
-// ✅ VIVAMAX NAKA-UNAHAN, KATABI NG NETFLIX
 const STREAMING_PROVIDERS = [
   { name: 'Vivamax', id: 'vivamax', type: 'vivamax', color: '#0028ff' },
   { name: 'Netflix', id: 8, type: 'provider', color: '#e50914' },
@@ -130,9 +150,8 @@ let currentTvId = null;
 let currentTrailerKey = null;
 
 // ============================================================
-// ✅ PERFORMANCE: API CACHE (5 minuto)
+// ✅ IN-MEMORY API CACHE (30 minuto)
 // ============================================================
-const CACHE_TTL = 5 * 60 * 1000;
 const API_CACHE = {};
 
 async function cachedFetch(url) {
@@ -145,28 +164,85 @@ async function cachedFetch(url) {
   const data = await res.json();
   API_CACHE[url] = { data: data, time: now };
 
-  // Limit cache size para hindi lumaki nang todo
   const keys = Object.keys(API_CACHE);
   if (keys.length > 60) {
     delete API_CACHE[keys[0]];
   }
-
   return data;
 }
 
 // ============================================================
-// ✅ AUTO-REFRESH HELPER
+// ✅ HOME CONTENT CACHE (localStorage, 10 min)
+// ============================================================
+function getHomeCache() {
+  try {
+    const raw = localStorage.getItem(HOME_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.time) return null;
+    if (Date.now() - parsed.time > HOME_CACHE_TTL) {
+      localStorage.removeItem(HOME_CACHE_KEY);
+      return null;
+    }
+    return parsed.data;
+  } catch (e) { return null; }
+}
+
+function saveHomeCache(data) {
+  try {
+    localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({
+      data: data,
+      time: Date.now()
+    }));
+  } catch (e) { console.warn('[MobiFlix] Cache save failed:', e); }
+}
+
+function clearHomeCache() {
+  localStorage.removeItem(HOME_CACHE_KEY);
+}
+
+// ============================================================
+// ✅ NOTIFICATION REFRESH CONTROL (1 oras)
+// ============================================================
+function shouldGenerateNotifications() {
+  const last = localStorage.getItem(NOTIF_LAST_GEN_KEY);
+  const now = Date.now();
+  if (!last || (now - parseInt(last, 10)) > NOTIF_REFRESH_TTL) {
+    localStorage.setItem(NOTIF_LAST_GEN_KEY, now.toString());
+    return true;
+  }
+  return false;
+}
+
+// ============================================================
+// ✅ SMART REFRESH (skip kung fresh pa)
 // ============================================================
 let isRefreshing = false;
 
 function triggerHomeRefresh() {
   if (typeof refreshHomeContent !== 'function') return;
   if (isRefreshing) return;
+
+  // ✅ Kung may fresh cache pa, i-render lang mula sa cache (0 API calls)
+  const cached = getHomeCache();
+  if (cached) {
+    console.log('[MobiFlix] ✅ Using fresh home cache (0 API calls)');
+    renderHomeFromCache(cached);
+    return;
+  }
+
   isRefreshing = true;
-  console.log('[MobiFlix] 🔄 Auto-refreshing content on homepage return...');
+  console.log('[MobiFlix] 🔄 Auto-refreshing content...');
   refreshHomeContent().finally(function() {
     isRefreshing = false;
   });
+}
+
+// ✅ Manual force refresh (para sa pull-to-refresh o button)
+function forceRefreshHome() {
+  clearHomeCache();
+  isRefreshing = false;
+  refreshHomeContent();
 }
 
 function getSortParams(sortBy, mediaType) {
@@ -191,7 +267,7 @@ function getSortParams(sortBy, mediaType) {
 }
 
 // ============================================================
-// ✅ STAR RATING HELPER — 1 star lang + number
+// ✅ STAR RATING HELPER
 // ============================================================
 function getStarHTML(voteAverage) {
   const numericRating = (voteAverage || 0).toFixed(1);
@@ -199,8 +275,7 @@ function getStarHTML(voteAverage) {
 }
 
 // ============================================================
-// ✅ POSTER WITH RATING — rating nasa LOOB ng poster
-// ✅ PERFORMANCE: w342 image, lazy loading, async decoding
+// ✅ POSTER WITH RATING
 // ============================================================
 function createPosterWithRating(item, mediaType, isEager) {
   if (mediaType) item.media_type = mediaType;
@@ -213,7 +288,6 @@ function createPosterWithRating(item, mediaType, isEager) {
   wrapper.dataset.id = item.id;
 
   const img = document.createElement('img');
-  // ✅ Gumamit ng w342 (mas mabilis kaysa w500)
   img.src = `${IMG_W342}${item.poster_path}`;
   img.alt = item.title || item.name;
   img.loading = isEager ? 'eager' : 'lazy';
@@ -221,7 +295,6 @@ function createPosterWithRating(item, mediaType, isEager) {
   if (isEager) img.fetchPriority = 'high';
   wrapper.appendChild(img);
 
-  // ✅ Rating badge sa loob ng poster (ibabang kaliwang corner)
   const ratingBadge = document.createElement('div');
   ratingBadge.className = 'poster-rating';
   ratingBadge.innerHTML = getStarHTML(item.vote_average);
@@ -232,7 +305,7 @@ function createPosterWithRating(item, mediaType, isEager) {
 }
 
 // ============================================================
-// HISTORY MANAGEMENT
+// HISTORY MANAGEMENT (layer stack)
 // ============================================================
 let layerStack = [];
 
@@ -318,7 +391,6 @@ function createSnow() {
   document.body.appendChild(container);
 
   var snowChars = ['❄', '❅', '❆', '•', '*', '❄', '❅'];
-  // ✅ Bawasan ang snowflakes sa mobile para hindi lag
   var isMobile = window.innerWidth <= 768;
   var maxSnowflakes = isMobile ? 20 : 50;
 
@@ -409,7 +481,7 @@ function filterKoreanSeries(results) {
 }
 
 // ============================================================
-// FETCH FUNCTIONS (lahat may cachedFetch na)
+// FETCH FUNCTIONS
 // ============================================================
 async function fetchTrending(type, page) {
   const data = await cachedFetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}&page=${page}`);
@@ -777,6 +849,7 @@ function updateNotifBadge() {
     badge.style.display = 'none';
   }
 }
+
 async function generateNotifications() {
   if (!isNotifEnabled()) return;
   try {
@@ -785,9 +858,12 @@ async function generateNotifications() {
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const dateStr = weekAgo.toISOString().split('T')[0];
 
-    const newMovies = await cachedFetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=primary_release_date.desc&primary_release_date.gte=${dateStr}&primary_release_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_MOVIE.join(',')}`);
-    const newTV = await cachedFetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=first_air_date.desc&first_air_date.gte=${dateStr}&first_air_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_TV.join(',')}`);
-    const ongoing = await cachedFetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=popularity.desc&first_air_date.lte=${todayStr}&vote_count.gte=50&with_status=0|1&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_TV.join(',')}&page=1`);
+    // ✅ 3 parallel requests (same pa rin, pero hindi na tinatawag every refresh)
+    const [newMovies, newTV, ongoing] = await Promise.all([
+      cachedFetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=primary_release_date.desc&primary_release_date.gte=${dateStr}&primary_release_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_MOVIE.join(',')}`),
+      cachedFetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=first_air_date.desc&first_air_date.gte=${dateStr}&first_air_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_TV.join(',')}`),
+      cachedFetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=popularity.desc&first_air_date.lte=${todayStr}&vote_count.gte=50&with_status=0|1&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_TV.join(',')}&page=1`)
+    ]);
 
     const notifications = [];
 
@@ -807,8 +883,10 @@ async function generateNotifications() {
       notifications.push({ id: item.id, media_type: 'tv', title: item.name, poster_path: item.poster_path, type: 'new_episode', message: 'New episode available! (' + typeLabel + ')', createdAt: Date.now(), read: false });
     });
     saveNotifications(notifications);
+    console.log('[MobiFlix] ✅ Notifications refreshed (3 API calls)');
   } catch (err) { console.error('[Notifications]', err); }
 }
+
 function openNotifications() {
   const panel = document.getElementById('notif-panel');
   if (panel.classList.contains('open')) { closeNotifications(); return; }
@@ -899,7 +977,6 @@ function closeUserProfile() {
 function displayBanner(item) {
   bannerItem = item;
   const banner = document.getElementById('banner');
-  // ✅ Gumamit ng w1280 para sa banner (mas mabilis kaysa original)
   const bannerImg = `${IMG_W1280}${item.backdrop_path || item.poster_path}`;
   banner.style.backgroundImage = `url(${bannerImg})`;
   document.getElementById('banner-title').textContent = item.title || item.name;
@@ -961,7 +1038,6 @@ function renderTop10(items, containerId, mediaType) {
     posterWrap.className = 'top10-poster-wrap';
 
     const img = document.createElement('img');
-    // ✅ w342 + eager loading sa Top 10 (above the fold)
     img.src = `${IMG_W342}${item.poster_path}`;
     img.alt = item.title || item.name;
     img.loading = 'eager';
@@ -991,7 +1067,6 @@ function renderProviders() {
     card.className = 'provider-card';
     card.title = provider.name;
 
-    // ===== VIVAMAX — original logo style (asul + orange) =====
     if (provider.type === 'vivamax') {
       card.classList.add('provider-card-vivamax');
       card.style.background = '#000';
@@ -1439,6 +1514,10 @@ async function loadCompletedPageBatch() {
   }
 }
 
+// ============================================================
+// ✅ PROVIDER BATCH OPTIMIZATION
+// 1 media type lang per batch (dating alternating)
+// ============================================================
 function openProviderPage(providerId, providerName, providerType) {
   closeAllPagesOnly();
   const page = document.getElementById('provider-page');
@@ -1474,8 +1553,15 @@ async function loadProviderBatch() {
     const filters = providerPageState.filters || {};
     const sortBy = filters.sort || 'popularity.desc';
     if (typeof providerPageState.batchCount === 'undefined') providerPageState.batchCount = 0;
-    const mediaType = (providerPageState.batchCount % 2 === 0) ? 'movie' : 'tv';
-    const apiPage = Math.floor(providerPageState.batchCount / 2) + 1;
+
+    // ✅ OPTIMIZED: 1 media type per batch (movie muna, tapos tv)
+    // Dati: alternating bawat batch → doble requests
+    // Ngayon: movie pages 1-3, tapos tv pages 1-3, tapos movie ulit...
+    const CYCLE_SIZE = 3;
+    const cycleIndex = Math.floor(providerPageState.batchCount / CYCLE_SIZE);
+    const mediaType = (cycleIndex % 2 === 0) ? 'movie' : 'tv';
+    const apiPage = (providerPageState.batchCount % CYCLE_SIZE) + 1;
+
     const bannedList = (mediaType === 'tv') ? BANNED_GENRES_TV : BANNED_GENRES_MOVIE;
     const sortParams = getSortParams(sortBy, mediaType);
     let url = `${BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&with_watch_providers=${providerPageState.providerId}&watch_region=US&page=${apiPage}${sortParams}&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${bannedList.join(',')}`;
@@ -1812,7 +1898,25 @@ function viewAllScrollHandler() {
 }
 
 // ============================================================
-// REFRESH HOME CONTENT (✅ sunod-sunod na fetch para hindi lag)
+// ✅ RENDER HOME FROM CACHE (0 API calls)
+// ============================================================
+function renderHomeFromCache(data) {
+  if (!data) return;
+  try {
+    if (data.banner) displayBanner(data.banner);
+    if (data.movies) renderTop10(data.movies, 'top10-movies', 'movie');
+    if (data.tv) renderTop10(data.tv, 'top10-tv', 'tv');
+    if (data.kdrama) renderTop10(data.kdrama, 'top10-kdrama', 'tv');
+    if (typeof renderContinueWatching === 'function') renderContinueWatching();
+    if (typeof updateNotifBadge === 'function') updateNotifBadge();
+    console.log('[MobiFlix] ✅ Rendered from cache (0 API calls)');
+  } catch (err) {
+    console.error('[MobiFlix] Cache render error:', err);
+  }
+}
+
+// ============================================================
+// ✅ REFRESH HOME CONTENT (may cache save)
 // ============================================================
 async function refreshHomeContent() {
   try {
@@ -1827,11 +1931,13 @@ async function refreshHomeContent() {
     if (tvRow) tvRow.innerHTML = '';
     if (kdramaRow) kdramaRow.innerHTML = '';
 
-    // ✅ Sunod-sunod para hindi sabay-sabay ang requests
+    // ✅ Sunod-sunod na fetch
     const moviesData = await fetchTrendingPhilippines('movie', 1);
+    let bannerItem = null;
     if (moviesData.results.length > 0) {
       const randomIndex = Math.floor(Math.random() * Math.min(5, moviesData.results.length));
-      displayBanner(moviesData.results[randomIndex]);
+      bannerItem = moviesData.results[randomIndex];
+      displayBanner(bannerItem);
     }
     moviesData.results.forEach(function(item) { item.media_type = 'movie'; });
     renderTop10(moviesData.results, 'top10-movies', 'movie');
@@ -1844,10 +1950,22 @@ async function refreshHomeContent() {
     kdramaData.results.forEach(function(item) { item.media_type = 'tv'; });
     renderTop10(kdramaData.results, 'top10-kdrama', 'tv');
 
-    // ✅ Notifications pagkatapos (hindi humaharang sa render)
-    setTimeout(function() {
-      generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
-    }, 1500);
+    // ✅ SAVE SA CACHE
+    saveHomeCache({
+      banner: bannerItem,
+      movies: moviesData.results,
+      tv: tvData.results,
+      kdrama: kdramaData.results
+    });
+
+    // ✅ Notifications: 1 oras lang
+    if (shouldGenerateNotifications()) {
+      setTimeout(function() {
+        generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
+      }, 1500);
+    } else {
+      console.log('[MobiFlix] ⏭️ Notifications skipped (fresh pa)');
+    }
 
     if (typeof renderContinueWatching === 'function') renderContinueWatching();
     if (typeof updateNotifBadge === 'function') updateNotifBadge();
@@ -1863,7 +1981,7 @@ async function refreshHomeContent() {
 }
 
 // ============================================================
-// INIT (✅ optimized)
+// ✅ INIT (optimized, may cache-first strategy)
 // ============================================================
 async function init() {
   try {
@@ -1879,14 +1997,33 @@ async function init() {
     const notifToggle = document.getElementById('notif-toggle');
     if (notifToggle) notifToggle.checked = isNotifEnabled();
 
-    // ✅ Snow effect pagkatapos ng UI (para hindi harangin ang render)
+    // ✅ Snow effect pagkatapos ng UI
     setTimeout(createSnow, 300);
 
-    // ✅ Sunod-sunod na fetch para mabilis mag-render ng unang row
+    // ✅ CACHE-FIRST: Kung may cache pa, i-render agad (0 API calls)
+    const cached = getHomeCache();
+    if (cached) {
+      console.log('[MobiFlix] ✅ Using cached home content');
+      renderHomeFromCache(cached);
+
+      // ✅ Notifications: 1 oras lang
+      if (shouldGenerateNotifications()) {
+        setTimeout(function() {
+          generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
+        }, 2000);
+      }
+      return;
+    }
+
+    // ✅ Walang cache → fetch fresh
+    console.log('[MobiFlix] 📡 No cache, fetching fresh content...');
+
     const moviesData = await fetchTrendingPhilippines('movie', 1);
+    let bannerItem = null;
     if (moviesData.results.length > 0) {
       const randomIndex = Math.floor(Math.random() * Math.min(5, moviesData.results.length));
-      displayBanner(moviesData.results[randomIndex]);
+      bannerItem = moviesData.results[randomIndex];
+      displayBanner(bannerItem);
     }
     moviesData.results.forEach(function(item) { item.media_type = 'movie'; });
     renderTop10(moviesData.results, 'top10-movies', 'movie');
@@ -1899,10 +2036,20 @@ async function init() {
     kdramaData.results.forEach(function(item) { item.media_type = 'tv'; });
     renderTop10(kdramaData.results, 'top10-kdrama', 'tv');
 
-    // ✅ Notifications pagkatapos (para hindi harangin ang render)
-    setTimeout(function() {
-      generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
-    }, 1500);
+    // ✅ SAVE SA CACHE
+    saveHomeCache({
+      banner: bannerItem,
+      movies: moviesData.results,
+      tv: tvData.results,
+      kdrama: kdramaData.results
+    });
+
+    // ✅ Notifications
+    if (shouldGenerateNotifications()) {
+      setTimeout(function() {
+        generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
+      }, 1500);
+    }
 
     console.log('[MobiFlix] Ready.');
   } catch (err) { console.error('[MobiFlix] Init error:', err); }
@@ -1934,6 +2081,8 @@ document.addEventListener('keydown', function(e) {
 
 function handleLogout() {
   if (confirm('Are you sure you want to log out?')) {
+    // ✅ Clear home cache para walang luma content sa ibang user
+    clearHomeCache();
     logout();
     showLoginScreen();
   }
