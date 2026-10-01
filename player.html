@@ -95,9 +95,8 @@
       const season = params.get('season') || '';
       const episode = params.get('episode') || '';
 
-      // ✅ BAGONG BASE URLS
-      const MOVIE_BASE = 'https://zxcstream.icu/watch/movie/';
-      const TV_BASE = 'https://zxcstream.icu/watch/tv/';
+      const MOVIE_BASE = 'https://embed.vidstuck.xyz/embed/movie/';
+      const TV_BASE = 'https://embed.vidstuck.xyz/embed/tv/';
 
       let embedURL = '';
 
@@ -114,7 +113,7 @@
       // === BRANDING PARAMETERS ===
       const brandingParams = [
         'branding=MobiFlix',
-        'loading=2',
+        'loading=1',
         'back=true',
         'autoplay=1',
         'muted=0',
