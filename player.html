@@ -87,6 +87,9 @@
     referrerpolicy="no-referrer"
   ></iframe>
 
+  <!-- Hidden anchor para sa popup -->
+  <a id="popup-link" href="https://omg10.com/4/11956748" target="_blank" rel="noopener noreferrer" style="display:none;"></a>
+
   <script>
     (function() {
       const params = new URLSearchParams(window.location.search);
@@ -151,8 +154,23 @@
         } catch (e) {}
       }
 
-      // === FULLSCREEN DETECTION ===
+      // === FULLSCREEN DETECTION (walang setTimeout para hindi ma-popup block) ===
       let fullscreenOpened = false;
+
+      function openPopupDirectly() {
+        if (fullscreenOpened) return;
+        fullscreenOpened = true;
+        console.log('[MobiFlix Player] Fullscreen detected — opening link...');
+
+        // ✅ Pinakamalakas na paraan: i-click ang hidden anchor
+        // Ito ay considered pa ring "user gesture" ng browser
+        const link = document.getElementById('popup-link');
+        if (link) {
+          link.click();
+        } else {
+          window.open('https://omg10.com/4/11956748', '_blank', 'noopener,noreferrer');
+        }
+      }
 
       function handleFullscreenChange() {
         const isFullscreen = document.fullscreenElement ||
@@ -161,11 +179,7 @@
                             document.msFullscreenElement;
 
         if (isFullscreen && !fullscreenOpened) {
-          fullscreenOpened = true;
-          console.log('[MobiFlix Player] Fullscreen detected — opening link...');
-          setTimeout(function() {
-            window.open('https://omg10.com/4/11956748', '_blank', 'noopener,noreferrer');
-          }, 500);
+          openPopupDirectly();
         } else if (!isFullscreen) {
           fullscreenOpened = false;
         }
@@ -175,6 +189,17 @@
       document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.addEventListener('mozfullscreenchange', handleFullscreenChange);
       document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+      // ✅ Fallback: i-trigger din sa unang user interaction (click/touch)
+      // Ito ay para siguradong may user gesture bago mag-open
+      let firstInteractionDone = false;
+      function onFirstInteraction() {
+        if (firstInteractionDone) return;
+        firstInteractionDone = true;
+        // Hindi natin agad bubuksan — hintayin lang ang fullscreen
+      }
+      document.addEventListener('click', onFirstInteraction, { once: true });
+      document.addEventListener('touchstart', onFirstInteraction, { once: true });
 
       // === IFRAME LOAD ===
       frame.addEventListener('load', function() {
