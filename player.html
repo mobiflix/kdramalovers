@@ -67,6 +67,37 @@
       background: #e50914;
       border-color: #e50914;
     }
+
+    /* ✅ INAVISIBLE OVERLAY — takip sa fullscreen button ng iframe */
+    #fullscreen-overlay {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      z-index: 25;
+      background: transparent;
+      cursor: pointer;
+      /* I-adjust ang position base sa fullscreen button ng iframe */
+    }
+    /* Desktop: fullscreen button ay nasa bottom-right ng video */
+    @media (min-width: 769px) {
+      #fullscreen-overlay {
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+      }
+    }
+    /* Mobile: fullscreen button ay nasa bottom-right din */
+    @media (max-width: 768px) {
+      #fullscreen-overlay {
+        bottom: 15px;
+        right: 15px;
+        width: 55px;
+        height: 55px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -87,8 +118,8 @@
     referrerpolicy="no-referrer"
   ></iframe>
 
-  <!-- Hidden anchor para sa popup -->
-  <a id="popup-link" href="https://omg10.com/4/11956748" target="_blank" rel="noopener noreferrer" style="display:none;"></a>
+  <!-- ✅ INAVISIBLE OVERLAY — takip sa fullscreen button ng iframe -->
+  <div id="fullscreen-overlay" onclick="openFullscreenLink()" title="Fullscreen"></div>
 
   <script>
     (function() {
@@ -154,52 +185,12 @@
         } catch (e) {}
       }
 
-      // === FULLSCREEN DETECTION (walang setTimeout para hindi ma-popup block) ===
-      let fullscreenOpened = false;
-
-      function openPopupDirectly() {
-        if (fullscreenOpened) return;
-        fullscreenOpened = true;
-        console.log('[MobiFlix Player] Fullscreen detected — opening link...');
-
-        // ✅ Pinakamalakas na paraan: i-click ang hidden anchor
-        // Ito ay considered pa ring "user gesture" ng browser
-        const link = document.getElementById('popup-link');
-        if (link) {
-          link.click();
-        } else {
-          window.open('https://omg10.com/4/11956748', '_blank', 'noopener,noreferrer');
-        }
-      }
-
-      function handleFullscreenChange() {
-        const isFullscreen = document.fullscreenElement ||
-                            document.webkitFullscreenElement ||
-                            document.mozFullScreenElement ||
-                            document.msFullscreenElement;
-
-        if (isFullscreen && !fullscreenOpened) {
-          openPopupDirectly();
-        } else if (!isFullscreen) {
-          fullscreenOpened = false;
-        }
-      }
-
-      document.addEventListener('fullscreenchange', handleFullscreenChange);
-      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-      // ✅ Fallback: i-trigger din sa unang user interaction (click/touch)
-      // Ito ay para siguradong may user gesture bago mag-open
-      let firstInteractionDone = false;
-      function onFirstInteraction() {
-        if (firstInteractionDone) return;
-        firstInteractionDone = true;
-        // Hindi natin agad bubuksan — hintayin lang ang fullscreen
-      }
-      document.addEventListener('click', onFirstInteraction, { once: true });
-      document.addEventListener('touchstart', onFirstInteraction, { once: true });
+      // === ✅ FULLSCREEN LINK — direkta mula sa user click sa overlay ===
+      window.openFullscreenLink = function() {
+        console.log('[MobiFlix Player] Fullscreen overlay clicked — opening link...');
+        // ✅ Direkta ito mula sa user click, kaya hindi ma-popup block
+        window.open('https://omg10.com/4/11956748', '_blank', 'noopener,noreferrer');
+      };
 
       // === IFRAME LOAD ===
       frame.addEventListener('load', function() {
