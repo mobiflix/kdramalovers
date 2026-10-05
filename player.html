@@ -151,6 +151,32 @@
         } catch (e) {}
       }
 
+      // === FULLSCREEN DETECTION ===
+      let fullscreenOpened = false;
+
+      function handleFullscreenChange() {
+        const isFullscreen = document.fullscreenElement ||
+                            document.webkitFullscreenElement ||
+                            document.mozFullScreenElement ||
+                            document.msFullscreenElement;
+
+        if (isFullscreen && !fullscreenOpened) {
+          fullscreenOpened = true;
+          console.log('[MobiFlix Player] Fullscreen detected — opening link...');
+          setTimeout(function() {
+            window.open('https://omg10.com/4/11956748', '_blank', 'noopener,noreferrer');
+          }, 500);
+        } else if (!isFullscreen) {
+          fullscreenOpened = false;
+        }
+      }
+
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+      // === IFRAME LOAD ===
       frame.addEventListener('load', function() {
         setTimeout(function() {
           document.getElementById('loading-overlay').classList.add('hidden');
