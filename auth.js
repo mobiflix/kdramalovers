@@ -4,25 +4,15 @@
 //   magdagdag / magpalit ng username & password
 // ============================================
 
-//  DITO MO ILALAGAY YUNG MGA USERNAME AT PASSWORD
 const USERS = [
   { username: 'mobiflix', password: '7777' }
 ];
 
-// ============================================
-//   LOGIN EXPIRATION SETTINGS
-// ============================================
-// Ilang ORAS bago ma-expire yung login session
 const SESSION_HOURS = 6;
-
-// ============================================
-//   HUWAG NANG GALAWIN ANG NASA IBABA
-// ============================================
 
 const AUTH_KEY = 'mobiflix_auth_session';
 const AUTH_TIME_KEY = 'mobiflix_auth_time';
 
-// ✅ Cache keys na kailangan i-clear sa logout
 const CACHE_KEYS_TO_CLEAR = [
   'mobiflix_home_cache',
   'mobiflix_notif_last_gen',
@@ -67,12 +57,18 @@ function logout() {
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(AUTH_TIME_KEY);
 
-  // ✅ Clear cached content para walang luma content sa ibang user
   CACHE_KEYS_TO_CLEAR.forEach(function(key) {
-    try {
-      localStorage.removeItem(key);
-    } catch (e) {}
+    try { localStorage.removeItem(key); } catch (e) {}
   });
+
+  // ✅ Clear lahat ng play tracking flags
+  try {
+    Object.keys(localStorage).forEach(function(key) {
+      if (key.indexOf('mobiflix_played_') === 0) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (e) {}
 
   console.log('[MobiFlix] ✅ Logged out, cache cleared');
 }
@@ -92,13 +88,6 @@ function hideLoginScreen() {
   const app = document.getElementById('app-content');
   if (app) app.style.display = '';
 
-  // ============================================
-  //   ✅ WALANG AUTO-REFRESH DITO
-  //   Ang auto-refresh ay nangyayari na lang
-  //   tuwing babalik sa homepage (tingnan sa home.js)
-  // ============================================
-
-  // Simulan ang snow pagkatapos mag-login
   setTimeout(function() {
     if (typeof createSnow === 'function') {
       if (!document.getElementById('snow-container')) {
@@ -148,9 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ============================================
-//   AUTO-CHECK SESSION EVERY MINUTE
-// ============================================
 setInterval(function() {
   if (!isLoggedIn()) {
     const loginScreen = document.getElementById('login-screen');

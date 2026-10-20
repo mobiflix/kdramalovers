@@ -10,20 +10,12 @@
   <link rel="stylesheet" href="home.css?v=58">
 
   <style>
-    /* ===== DETAILS PAGE SPECIFIC ===== */
-    body.details-page {
-      padding-bottom: 0;
-      overflow-x: hidden;
-    }
+    body.details-page { padding-bottom: 0; overflow-x: hidden; }
 
     .details-page-header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 1000;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 1000; padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px;
       background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
       pointer-events: none;
     }
@@ -36,27 +28,16 @@
       -webkit-backdrop-filter: blur(10px);
     }
 
-    .details-page-header .back-btn:hover {
-      background: #e50914;
-      border-color: #e50914;
-    }
+    .details-page-header .back-btn:hover { background: #e50914; border-color: #e50914; }
 
-    /* ===== HERO SECTION ===== */
     .details-hero {
-      position: relative;
-      width: 100%;
-      height: 70vh;
-      min-height: 500px;
-      background-size: cover;
-      background-position: center 20%;
-      display: flex;
-      align-items: flex-end;
-      padding: 0 60px 80px;
+      position: relative; width: 100%; height: 70vh; min-height: 500px;
+      background-size: cover; background-position: center 20%;
+      display: flex; align-items: flex-end; padding: 0 60px 80px;
     }
 
     .details-hero-overlay {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background:
         linear-gradient(0deg, #0b0b0b 0%, rgba(11,11,11,0.6) 40%, transparent 100%),
         linear-gradient(90deg, rgba(11,11,11,0.9) 0%, transparent 60%);
@@ -64,117 +45,50 @@
     }
 
     .details-hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 700px;
+      position: relative; z-index: 2; max-width: 700px;
       animation: heroFadeIn 0.6s ease;
     }
 
     .details-hero-content h1 {
-      font-size: 56px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 18px;
-      line-height: 1.05;
-      letter-spacing: -1.5px;
+      font-size: 56px; font-weight: 900; color: #fff;
+      margin-bottom: 18px; line-height: 1.05; letter-spacing: -1.5px;
       text-shadow: 0 4px 30px rgba(0,0,0,0.9);
     }
 
-    .details-hero-meta {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .details-hero-rating {
-      color: #f5c518;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .details-hero-year {
-      color: #ccc;
-      font-size: 16px;
-    }
-
+    .details-hero-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+    .details-hero-rating { color: #f5c518; font-size: 18px; font-weight: 700; }
+    .details-hero-year { color: #ccc; font-size: 16px; }
     .details-hero-type {
-      background: #e50914;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      background: #e50914; color: #fff; font-size: 11px; font-weight: 700;
+      padding: 4px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
     }
 
-    .details-hero-genres {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
+    .details-hero-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
     .details-genre-tag {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 14px;
-      border-radius: 60px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 60px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
 
     .details-hero-description {
-      color: #ddd;
-      font-size: 16px;
-      line-height: 1.7;
-      margin-bottom: 28px;
-      max-width: 650px;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+      color: #ddd; font-size: 16px; line-height: 1.7; margin-bottom: 28px;
+      max-width: 650px; text-shadow: 0 2px 12px rgba(0,0,0,0.9);
     }
 
-    .details-hero-buttons {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
+    .details-hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; }
 
-    /* ===== DETAILS CONTENT ===== */
-    .details-content {
-      position: relative;
-      z-index: 3;
-      margin-top: -60px;
-      padding: 0 60px 80px;
-    }
+    .details-content { position: relative; z-index: 3; margin-top: -60px; padding: 0 60px 80px; }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .details-page-header { padding: 12px 16px; }
-
-      .details-hero {
-        height: 60vh;
-        min-height: 420px;
-        padding: 0 20px 60px;
-      }
-
-      .details-hero-content h1 {
-        font-size: 32px;
-        letter-spacing: -0.5px;
-        margin-bottom: 12px;
-      }
-
+      .details-hero { height: 60vh; min-height: 420px; padding: 0 20px 60px; }
+      .details-hero-content h1 { font-size: 32px; letter-spacing: -0.5px; margin-bottom: 12px; }
       .details-hero-meta { gap: 10px; margin-bottom: 12px; }
       .details-hero-rating { font-size: 15px; }
       .details-hero-year { font-size: 14px; }
       .details-hero-description { font-size: 14px; margin-bottom: 20px; }
       .details-hero-genres { gap: 6px; margin-bottom: 12px; }
       .details-genre-tag { font-size: 11px; padding: 4px 10px; }
-
       .details-content { padding: 0 16px 60px; margin-top: -40px; }
     }
 
@@ -187,7 +101,6 @@
 
 <body class="details-page">
 
-  <!-- ===== LOADING ===== -->
   <div id="details-loading" style="
     position: fixed; inset: 0; z-index: 9999;
     display: flex; align-items: center; justify-content: center;
@@ -196,17 +109,14 @@
     <i class="fa fa-spinner fa-spin"></i>
   </div>
 
-  <!-- ===== HEADER ===== -->
   <div class="details-page-header" id="details-page-header" style="display:none;">
     <button class="back-btn" onclick="goBack()">
       <i class="fa fa-arrow-left"></i> Back
     </button>
   </div>
 
-  <!-- ===== MAIN CONTENT ===== -->
   <div id="details-page-content" style="display:none;">
 
-    <!-- HERO -->
     <div class="details-hero" id="details-hero">
       <div class="details-hero-overlay"></div>
       <div class="details-hero-content">
@@ -229,35 +139,26 @@
       </div>
     </div>
 
-    <!-- CONTENT -->
     <div class="details-content">
-
-      <!-- EPISODES -->
       <div class="episodes-section" id="episodes-section" style="display:none;">
         <h3 class="section-title">📺 Episodes</h3>
         <div class="season-selector" id="season-selector"></div>
         <div class="episodes-list" id="episodes-list"></div>
       </div>
 
-      <!-- CAST (walang click) -->
       <div class="cast-section" id="cast-section">
         <h3 class="section-title">🎭 Cast</h3>
         <div class="cast-scroll" id="cast-list"></div>
       </div>
 
-      <!-- SIMILAR -->
       <div class="similar-section" id="similar-section">
         <h3 class="section-title">✨ You May Also Like</h3>
         <div class="similar-scroll" id="similar-list"></div>
       </div>
-
     </div>
   </div>
 
   <script>
-    // ============================================================
-    // CONFIG
-    // ============================================================
     const API_KEY = 'e0a7266a5d0e95c36475f349d8bc0a5a';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL = 'https://image.tmdb.org/t/p/original';
@@ -270,51 +171,13 @@
     const CONTINUE_KEY = 'mobiflix_continue_watching';
 
     const INDIAN_LANGS = ['hi','ta','te','ml','kn','bn','mr','pa','gu','or','as','ur','sa','ne','si'];
-
-    // ===== BANNED GENRES PARA SA MOVIES (walang Animation at Kids) =====
     const BANNED_GENRES_MOVIE = [10764, 10767, 10763, 10766, 10402, 99, 10768];
-
-    // ===== BANNED GENRES PARA SA TV (kasama ang Animation at Kids) =====
     const BANNED_GENRES_TV = [10764, 10767, 10763, 10766, 10402, 99, 10768, 16, 10762];
 
     let currentItem = null;
     let currentTrailerKey = null;
     let currentTvId = null;
 
-    // ===== GENRE NAMES MAP =====
-    const GENRE_MAP = {
-      28: 'Action',
-      12: 'Adventure',
-      16: 'Animation',
-      35: 'Comedy',
-      80: 'Crime',
-      99: 'Documentary',
-      18: 'Drama',
-      10751: 'Family',
-      14: 'Fantasy',
-      36: 'History',
-      27: 'Horror',
-      10402: 'Music',
-      9648: 'Mystery',
-      10749: 'Romance',
-      878: 'Sci-Fi',
-      10770: 'TV Movie',
-      53: 'Thriller',
-      10752: 'War',
-      37: 'Western',
-      10759: 'Action & Adventure',
-      10762: 'Kids',
-      10763: 'News',
-      10764: 'Reality',
-      10765: 'Sci-Fi & Fantasy',
-      10766: 'Soap',
-      10767: 'Talk',
-      10768: 'War & Politics'
-    };
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function goBack() {
       if (document.referrer && document.referrer.indexOf(location.host) !== -1) {
         history.back();
@@ -343,16 +206,11 @@
       return (results || []).filter(function(item) {
         const genres = item.genre_ids || [];
         if (genres.length === 0) return true;
-        const hasBanned = genres.some(function(g) {
-          return bannedList.includes(g);
-        });
+        const hasBanned = genres.some(function(g) { return bannedList.includes(g); });
         return !hasBanned;
       });
     }
 
-    // ============================================================
-    // FETCH
-    // ============================================================
     async function fetchCredits(mediaType, id) {
       try {
         const type = mediaType === 'tv' ? 'tv' : 'movie';
@@ -399,9 +257,6 @@
       return data;
     }
 
-    // ============================================================
-    // EPISODES
-    // ============================================================
     async function fetchTvSeasons(tvId) {
       try {
         const res = await fetch(`${BASE_URL}/tv/${tvId}?api_key=${API_KEY}`);
@@ -434,9 +289,6 @@
       localStorage.setItem(EPISODE_PROGRESS_KEY, JSON.stringify(progress));
     }
 
-    // ============================================================
-    // WATCHLIST
-    // ============================================================
     function getWatchlist() {
       try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY)) || []; }
       catch (e) { return []; }
@@ -446,9 +298,6 @@
       localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
     }
 
-    // ============================================================
-    // HISTORY
-    // ============================================================
     function addToHistory(item) {
       if (!item || !item.id) return;
       const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
@@ -486,27 +335,62 @@
     }
 
     // ============================================================
-    // PLAYER
+    // ✅ RELIABLE NEW TAB OPENER — hindi hinaharang ng popup blocker
     // ============================================================
-    function playNow() {
-      if (!currentItem) return;
-      const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
-      const title = currentItem.title || currentItem.name || 'MobiFlix';
-      const year = (currentItem.release_date || currentItem.first_air_date || '').slice(0, 4);
-
-      let url;
-      if (isMovie) {
-        url = `player.html?type=movie&id=${currentItem.id}&title=${encodeURIComponent(title)}&year=${year}`;
-      } else {
-        url = `player.html?type=tv&id=${currentItem.id}&title=${encodeURIComponent(title)}`;
-      }
-
-      if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(function() {});
-      }
-      window.location.href = url;
+    function openNewTab(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(function() {
+        if (link.parentNode) link.parentNode.removeChild(link);
+      }, 100);
     }
 
+    // ============================================================
+    // ✅ PLAY NOW — 1st click: uplcm new tab / 2nd+: player.html
+    // ============================================================
+    function playNow() {
+      if (!currentItem) {
+        console.warn('[MobiFlix] currentItem is null');
+        return;
+      }
+
+      const key = 'mobiflix_play_this_visit_' + currentItem.media_type + '_' + currentItem.id;
+      const hasClicked = sessionStorage.getItem(key) === 'true';
+
+      console.log('[MobiFlix] playNow — key:', key, '| hasClicked:', hasClicked);
+
+      if (!hasClicked) {
+        sessionStorage.setItem(key, 'true');
+        console.log('[MobiFlix] → Opening uplcm new tab');
+        openNewTab('https://uplcm.com/4/12083099');
+      } else {
+        console.log('[MobiFlix] → Opening player.html');
+        const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
+        const title = currentItem.title || currentItem.name || 'MobiFlix';
+        const year = (currentItem.release_date || currentItem.first_air_date || '').slice(0, 4);
+
+        let url;
+        if (isMovie) {
+          url = `player.html?type=movie&id=${currentItem.id}&title=${encodeURIComponent(title)}&year=${year}`;
+        } else {
+          url = `player.html?type=tv&id=${currentItem.id}&title=${encodeURIComponent(title)}`;
+        }
+
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(function() {});
+        }
+        window.location.href = url;
+      }
+    }
+
+    // ============================================================
+    // ✅ PLAY EPISODE — 1st click: uplcm new tab / 2nd+: player.html
+    // ============================================================
     function playEpisode(tvId, seasonNumber, episodeNumber) {
       markEpisodeWatched(tvId, seasonNumber, episodeNumber);
       const allEpisodes = document.querySelectorAll('.episode-item');
@@ -518,23 +402,32 @@
         if (text.indexOf(expected) !== -1) el.classList.add('watched');
       });
 
-      const title = currentItem ? (currentItem.title || currentItem.name) : 'TV Show';
-      const url = `player.html?type=tv&id=${tvId}&season=${seasonNumber}&episode=${episodeNumber}&title=${encodeURIComponent(title)}`;
+      const key = 'mobiflix_play_ep_this_visit_' + tvId + '_s' + seasonNumber + 'e' + episodeNumber;
+      const hasClicked = sessionStorage.getItem(key) === 'true';
 
-      if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(function() {});
+      console.log('[MobiFlix] playEpisode — key:', key, '| hasClicked:', hasClicked);
+
+      if (!hasClicked) {
+        sessionStorage.setItem(key, 'true');
+        console.log('[MobiFlix] → Opening uplcm new tab (episode)');
+        openNewTab('https://uplcm.com/4/12083099');
+      } else {
+        console.log('[MobiFlix] → Opening player.html (episode)');
+        const title = currentItem ? (currentItem.title || currentItem.name) : 'TV Show';
+        const url = `player.html?type=tv&id=${tvId}&season=${seasonNumber}&episode=${episodeNumber}&title=${encodeURIComponent(title)}`;
+
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(function() {});
+        }
+        window.location.href = url;
       }
-      window.location.href = url;
     }
 
     function playTrailer() {
       if (!currentTrailerKey) return;
-      window.open(`https://www.youtube.com/watch?v=${currentTrailerKey}`, '_blank');
+      openNewTab(`https://www.youtube.com/watch?v=${currentTrailerKey}`);
     }
 
-    // ============================================================
-    // RENDER — CAST (walang click, hindi clickable)
-    // ============================================================
     function renderCast(cast) {
       const container = document.getElementById('cast-list');
       container.innerHTML = '';
@@ -753,9 +646,6 @@
       episodesList.appendChild(episodesContainer);
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
     async function init() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
@@ -766,6 +656,20 @@
         return;
       }
 
+      // ✅ RESET play flags kada bagong details page visit
+      const playKey = 'mobiflix_play_this_visit_' + type + '_' + id;
+      sessionStorage.removeItem(playKey);
+
+      if (type === 'tv') {
+        try {
+          Object.keys(sessionStorage).forEach(function(k) {
+            if (k.indexOf('mobiflix_play_ep_this_visit_' + id + '_') === 0) {
+              sessionStorage.removeItem(k);
+            }
+          });
+        } catch (e) {}
+      }
+
       try {
         const item = await fetchFullDetails(id, type);
         currentItem = item;
@@ -773,7 +677,6 @@
         addToHistory(item);
         addToContinueWatching(item);
 
-        // HERO
         document.getElementById('details-hero').style.backgroundImage =
           `url(${IMG_URL}${item.backdrop_path || item.poster_path})`;
         document.getElementById('details-title').textContent = item.title || item.name;
@@ -788,7 +691,6 @@
         const typeLabel = item.media_type === 'movie' ? 'Movie' : 'TV Show';
         document.getElementById('details-type').textContent = typeLabel;
 
-        // GENRES
         const genresContainer = document.getElementById('details-genres');
         genresContainer.innerHTML = '';
         if (item.genres && item.genres.length > 0) {
@@ -805,21 +707,18 @@
         document.getElementById('details-description').textContent =
           item.overview || 'No description available.';
 
-        // Hide loading, show content
         document.getElementById('details-loading').style.display = 'none';
         document.getElementById('details-page-header').style.display = 'flex';
         document.getElementById('details-page-content').style.display = 'block';
 
         document.title = `${item.title || item.name} — MobiFlix`;
 
-        // EPISODES
         if (item.media_type === 'tv') {
           loadEpisodesSection(item);
         } else {
           document.getElementById('episodes-section').style.display = 'none';
         }
 
-        // CAST + SIMILAR + TRAILER
         document.getElementById('cast-list').innerHTML = '<div style="color:#666;padding:10px 0;">Loading cast...</div>';
         document.getElementById('similar-list').innerHTML = '<div style="color:#666;padding:10px 0;flex-shrink:0;">Loading recommendations...</div>';
 

@@ -1,14 +1,6 @@
 // ============================================================
 // MOBIFLIX HOME.JS — OPTIMIZED v2
 // ============================================================
-// ✅ Performance optimizations:
-//   - Home content cache (10 min sa localStorage)
-//   - Notification refresh (1 oras lang, hindi every refresh)
-//   - API cache TTL 30 min (dating 5 min)
-//   - Smart refresh (skip kung fresh pa)
-//   - Clear cache sa logout
-//   - Provider batch optimization
-// ============================================================
 
 const API_KEY = 'e0a7266a5d0e95c36475f349d8bc0a5a';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -20,9 +12,6 @@ const IMG_PROFILE = 'https://image.tmdb.org/t/p/w185';
 
 const VIVAMAX_COMPANY_ID = '149142';
 
-// ============================================================
-// ✅ CACHE KEYS & TTL
-// ============================================================
 const HISTORY_KEY = 'mobiflix_watch_history';
 const THEME_KEY = 'mobiflix_theme';
 const NOTIF_KEY = 'mobiflix_notifications';
@@ -31,15 +20,14 @@ const NOTIF_LAST_GEN_KEY = 'mobiflix_notif_last_gen';
 const CONTINUE_KEY = 'mobiflix_continue_watching';
 const EPISODE_PROGRESS_KEY = 'mobiflix_episode_progress';
 const HOME_CACHE_KEY = 'mobiflix_home_cache';
-const HOME_CACHE_TTL = 10 * 60 * 1000; // ✅ 10 minuto
-const NOTIF_REFRESH_TTL = 60 * 60 * 1000; // ✅ 1 oras
-const CACHE_TTL = 30 * 60 * 1000; // ✅ 30 minuto (dating 5 min)
+const HOME_CACHE_TTL = 10 * 60 * 1000;
+const NOTIF_REFRESH_TTL = 60 * 60 * 1000;
+const CACHE_TTL = 30 * 60 * 1000;
 
 const MAX_HISTORY = 30;
 const MAX_CONTINUE = 10;
 
 const INDIAN_LANGS = ['hi', 'ta', 'te', 'ml', 'kn', 'bn', 'mr', 'pa', 'gu', 'or', 'as', 'ur', 'sa', 'ne', 'si'];
-
 const BANNED_GENRES_MOVIE = [10764, 10767, 10763, 10766, 10402, 99, 10768];
 const BANNED_GENRES_TV = [10764, 10767, 10763, 10766, 10402, 99, 10768, 16, 10762];
 const KOREAN_EXCLUDE_GENRES = [10764, 10767, 10763, 10766, 16, 10762];
@@ -149,31 +137,20 @@ let bannerItem;
 let currentTvId = null;
 let currentTrailerKey = null;
 
-// ============================================================
-// ✅ IN-MEMORY API CACHE (30 minuto)
-// ============================================================
 const API_CACHE = {};
 
 async function cachedFetch(url) {
   const now = Date.now();
   const cached = API_CACHE[url];
-  if (cached && (now - cached.time) < CACHE_TTL) {
-    return cached.data;
-  }
+  if (cached && (now - cached.time) < CACHE_TTL) return cached.data;
   const res = await fetch(url);
   const data = await res.json();
   API_CACHE[url] = { data: data, time: now };
-
   const keys = Object.keys(API_CACHE);
-  if (keys.length > 60) {
-    delete API_CACHE[keys[0]];
-  }
+  if (keys.length > 60) delete API_CACHE[keys[0]];
   return data;
 }
 
-// ============================================================
-// ✅ HOME CONTENT CACHE (localStorage, 10 min)
-// ============================================================
 function getHomeCache() {
   try {
     const raw = localStorage.getItem(HOME_CACHE_KEY);
@@ -190,20 +167,12 @@ function getHomeCache() {
 
 function saveHomeCache(data) {
   try {
-    localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({
-      data: data,
-      time: Date.now()
-    }));
+    localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ data: data, time: Date.now() }));
   } catch (e) { console.warn('[MobiFlix] Cache save failed:', e); }
 }
 
-function clearHomeCache() {
-  localStorage.removeItem(HOME_CACHE_KEY);
-}
+function clearHomeCache() { localStorage.removeItem(HOME_CACHE_KEY); }
 
-// ============================================================
-// ✅ NOTIFICATION REFRESH CONTROL (1 oras)
-// ============================================================
 function shouldGenerateNotifications() {
   const last = localStorage.getItem(NOTIF_LAST_GEN_KEY);
   const now = Date.now();
@@ -214,31 +183,22 @@ function shouldGenerateNotifications() {
   return false;
 }
 
-// ============================================================
-// ✅ SMART REFRESH (skip kung fresh pa)
-// ============================================================
 let isRefreshing = false;
 
 function triggerHomeRefresh() {
   if (typeof refreshHomeContent !== 'function') return;
   if (isRefreshing) return;
-
-  // ✅ Kung may fresh cache pa, i-render lang mula sa cache (0 API calls)
   const cached = getHomeCache();
   if (cached) {
     console.log('[MobiFlix] ✅ Using fresh home cache (0 API calls)');
     renderHomeFromCache(cached);
     return;
   }
-
   isRefreshing = true;
   console.log('[MobiFlix] 🔄 Auto-refreshing content...');
-  refreshHomeContent().finally(function() {
-    isRefreshing = false;
-  });
+  refreshHomeContent().finally(function() { isRefreshing = false; });
 }
 
-// ✅ Manual force refresh (para sa pull-to-refresh o button)
 function forceRefreshHome() {
   clearHomeCache();
   isRefreshing = false;
@@ -246,9 +206,7 @@ function forceRefreshHome() {
 }
 
 function getSortParams(sortBy, mediaType) {
-  if (!sortBy || sortBy === 'popularity.desc') {
-    return '&sort_by=popularity.desc';
-  }
+  if (!sortBy || sortBy === 'popularity.desc') return '&sort_by=popularity.desc';
   if (sortBy === 'primary_release_date.desc') {
     if (mediaType === 'tv') return '&sort_by=first_air_date.desc';
     return '&sort_by=primary_release_date.desc';
@@ -257,26 +215,16 @@ function getSortParams(sortBy, mediaType) {
     if (mediaType === 'tv') return '&sort_by=first_air_date.asc';
     return '&sort_by=primary_release_date.asc';
   }
-  if (sortBy === 'vote_average.desc') {
-    return '&sort_by=vote_average.desc&vote_count.gte=100';
-  }
-  if (sortBy === 'vote_average.asc') {
-    return '&sort_by=vote_average.asc&vote_count.gte=100';
-  }
+  if (sortBy === 'vote_average.desc') return '&sort_by=vote_average.desc&vote_count.gte=100';
+  if (sortBy === 'vote_average.asc') return '&sort_by=vote_average.asc&vote_count.gte=100';
   return '&sort_by=' + sortBy;
 }
 
-// ============================================================
-// ✅ STAR RATING HELPER
-// ============================================================
 function getStarHTML(voteAverage) {
   const numericRating = (voteAverage || 0).toFixed(1);
   return '<i class="fa fa-star"></i><span class="rating-number">' + numericRating + '</span>';
 }
 
-// ============================================================
-// ✅ POSTER WITH RATING
-// ============================================================
 function createPosterWithRating(item, mediaType, isEager) {
   if (mediaType) item.media_type = mediaType;
   if (!item.media_type) {
@@ -304,9 +252,6 @@ function createPosterWithRating(item, mediaType, isEager) {
   return wrapper;
 }
 
-// ============================================================
-// HISTORY MANAGEMENT (layer stack)
-// ============================================================
 let layerStack = [];
 
 function pushLayer(type, data) {
@@ -323,28 +268,17 @@ function popLayer() {
 
 function closeLayerByType(type, data) {
   switch (type) {
-    case 'view-all':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'vivamax':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'genre':
-      closeAllPagesOnly(); setActiveNav('more'); triggerHomeRefresh(); break;
-    case 'ongoing':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'completed':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'provider':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'my-list':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'more':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'search':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    case 'profile':
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
-    default:
-      closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh();
+    case 'view-all': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'vivamax': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'genre': closeAllPagesOnly(); setActiveNav('more'); triggerHomeRefresh(); break;
+    case 'ongoing': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'completed': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'provider': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'my-list': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'more': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'search': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    case 'profile': closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh(); break;
+    default: closeAllPagesOnly(); setActiveNav('home'); triggerHomeRefresh();
   }
 }
 
@@ -379,9 +313,6 @@ let genrePageState = {};
 let ongoingPageState = {};
 let completedPageState = {};
 
-// ============================================================
-// SNOW EFFECT
-// ============================================================
 function createSnow() {
   var existing = document.getElementById('snow-container');
   if (existing) existing.parentNode.removeChild(existing);
@@ -419,12 +350,8 @@ function createSnow() {
     setTimeout(startSnow, nextDelay);
   }
   startSnow();
-  console.log('[MobiFlix] Snow started ❄️');
 }
 
-// ============================================================
-// POPULATE COUNTRY DROPDOWNS
-// ============================================================
 function populateCountryDropdowns() {
   const prefixes = ['filter-', 'provider-filter-', 'genre-filter-', 'vivamax-filter-'];
   prefixes.forEach(function(prefix) {
@@ -438,7 +365,6 @@ function populateCountryDropdowns() {
       select.appendChild(option);
     });
   });
-  console.log('[MobiFlix] Country dropdowns populated ✅');
 }
 
 function filterNonIndian(results) {
@@ -480,9 +406,6 @@ function filterKoreanSeries(results) {
   return (results || []).filter(function(item) { return isKoreanSeries(item); });
 }
 
-// ============================================================
-// FETCH FUNCTIONS
-// ============================================================
 async function fetchTrending(type, page) {
   const data = await cachedFetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}&page=${page}`);
   let results = filterNonIndian(data.results);
@@ -604,9 +527,6 @@ async function fetchVivamaxMovies(page) {
   return { results: results, total_pages: data.total_pages || 1 };
 }
 
-// ============================================================
-// TRAILER
-// ============================================================
 async function fetchTrailer(mediaType, id) {
   try {
     const type = mediaType === 'tv' ? 'tv' : 'movie';
@@ -627,9 +547,6 @@ function playTrailer() {
   window.open(url, '_blank');
 }
 
-// ============================================================
-// EPISODE PROGRESS
-// ============================================================
 function getEpisodeProgress() {
   try { return JSON.parse(localStorage.getItem(EPISODE_PROGRESS_KEY)) || {}; }
   catch (e) { return {}; }
@@ -647,9 +564,6 @@ function isEpisodeWatched(tvId, seasonNumber, episodeNumber) {
   return !!progress[`${tvId}_s${seasonNumber}e${episodeNumber}`];
 }
 
-// ============================================================
-// WATCH HISTORY
-// ============================================================
 function getWatchHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
   catch (e) { return []; }
@@ -662,9 +576,7 @@ function addToHistory(item) {
   const list = getWatchHistory();
   const filtered = list.filter(function(x) { return x.id !== item.id; });
   filtered.unshift({
-    id: item.id,
-    title: item.title || item.name,
-    poster_path: item.poster_path,
+    id: item.id, title: item.title || item.name, poster_path: item.poster_path,
     media_type: item.media_type || (item.title ? 'movie' : 'tv'),
     vote_average: item.vote_average,
     release_date: item.release_date || item.first_air_date,
@@ -684,10 +596,8 @@ function renderHistory() {
   const grid = document.getElementById('history-grid');
   const empty = document.getElementById('history-empty');
   const clearBtn = document.getElementById('clear-history-btn');
-
   if (!grid) return;
   grid.innerHTML = '';
-
   if (list.length === 0) {
     empty.style.display = 'block';
     clearBtn.style.display = 'none';
@@ -695,7 +605,6 @@ function renderHistory() {
   }
   empty.style.display = 'none';
   clearBtn.style.display = 'inline-flex';
-
   list.forEach(function(item) {
     if (!item.poster_path) return;
     const wrapper = createPosterWithRating(item);
@@ -707,9 +616,6 @@ function renderHistory() {
   });
 }
 
-// ============================================================
-// CONTINUE WATCHING
-// ============================================================
 function getContinueWatching() {
   try { return JSON.parse(localStorage.getItem(CONTINUE_KEY)) || []; }
   catch (e) { return []; }
@@ -722,9 +628,7 @@ function addToContinueWatching(item) {
   const list = getContinueWatching();
   const filtered = list.filter(function(x) { return x.id !== item.id; });
   filtered.unshift({
-    id: item.id,
-    title: item.title || item.name,
-    poster_path: item.poster_path,
+    id: item.id, title: item.title || item.name, poster_path: item.poster_path,
     backdrop_path: item.backdrop_path,
     media_type: item.media_type || (item.title ? 'movie' : 'tv'),
     vote_average: item.vote_average,
@@ -735,23 +639,18 @@ function addToContinueWatching(item) {
   if (filtered.length > MAX_CONTINUE) filtered.length = MAX_CONTINUE;
   saveContinueWatching(filtered);
 }
-
 function renderContinueWatching() {
   const list = getContinueWatching();
   const container = document.getElementById('continue-watching-list');
   const row = document.getElementById('continue-watching-row');
-
   if (!container || !row) return;
   if (list.length === 0) { row.style.display = 'none'; return; }
-
   row.style.display = 'block';
   container.innerHTML = '';
-
   list.forEach(function(item) {
     const card = document.createElement('div');
     card.className = 'continue-card';
     card.onclick = function() { showDetails(item); };
-
     const img = document.createElement('img');
     img.alt = item.title || item.name;
     img.loading = 'lazy';
@@ -759,22 +658,18 @@ function renderContinueWatching() {
     if (item.backdrop_path) img.src = `${IMG_W342}${item.backdrop_path}`;
     else if (item.poster_path) img.src = `${IMG_W342}${item.poster_path}`;
     else img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 124" fill="%23222"><rect width="220" height="124"/></svg>';
-
     const progress = document.createElement('div');
     progress.className = 'continue-progress';
     const progressBar = document.createElement('div');
     progressBar.className = 'continue-progress-bar';
     progressBar.style.width = item.progress + '%';
     progress.appendChild(progressBar);
-
     const title = document.createElement('div');
     title.className = 'continue-title';
     title.textContent = item.title || item.name;
-
     const subtitle = document.createElement('div');
     subtitle.className = 'continue-subtitle';
     subtitle.textContent = item.progress + '% watched';
-
     card.appendChild(img);
     card.appendChild(progress);
     card.appendChild(title);
@@ -783,9 +678,6 @@ function renderContinueWatching() {
   });
 }
 
-// ============================================================
-// THEMES
-// ============================================================
 function loadTheme() {
   const theme = localStorage.getItem(THEME_KEY) || 'default';
   applyTheme(theme);
@@ -818,9 +710,6 @@ function updateThemeIcon() {
   icon.className = theme === 'light' ? 'fa fa-sun' : 'fa fa-moon';
 }
 
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
 function getNotifications() {
   try { return JSON.parse(localStorage.getItem(NOTIF_KEY)) || []; }
   catch (e) { return []; }
@@ -829,9 +718,7 @@ function saveNotifications(list) {
   localStorage.setItem(NOTIF_KEY, JSON.stringify(list));
   updateNotifBadge();
 }
-function isNotifEnabled() {
-  return localStorage.getItem(NOTIF_ENABLED_KEY) !== 'false';
-}
+function isNotifEnabled() { return localStorage.getItem(NOTIF_ENABLED_KEY) !== 'false'; }
 function toggleNotifications() {
   const toggle = document.getElementById('notif-toggle');
   localStorage.setItem(NOTIF_ENABLED_KEY, toggle.checked ? 'true' : 'false');
@@ -858,7 +745,6 @@ async function generateNotifications() {
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const dateStr = weekAgo.toISOString().split('T')[0];
 
-    // ✅ 3 parallel requests (same pa rin, pero hindi na tinatawag every refresh)
     const [newMovies, newTV, ongoing] = await Promise.all([
       cachedFetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=primary_release_date.desc&primary_release_date.gte=${dateStr}&primary_release_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_MOVIE.join(',')}`),
       cachedFetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=first_air_date.desc&first_air_date.gte=${dateStr}&first_air_date.lte=${todayStr}&vote_count.gte=20&without_original_language=${INDIAN_LANGS.join('|')}&without_genres=${BANNED_GENRES_TV.join(',')}`),
@@ -866,7 +752,6 @@ async function generateNotifications() {
     ]);
 
     const notifications = [];
-
     (newMovies.results || []).slice(0, 5).forEach(function(item) {
       notifications.push({ id: item.id, media_type: 'movie', title: item.title, poster_path: item.poster_path, type: 'new_release', message: 'New movie released!', createdAt: Date.now(), read: false });
     });
@@ -883,7 +768,6 @@ async function generateNotifications() {
       notifications.push({ id: item.id, media_type: 'tv', title: item.name, poster_path: item.poster_path, type: 'new_episode', message: 'New episode available! (' + typeLabel + ')', createdAt: Date.now(), read: false });
     });
     saveNotifications(notifications);
-    console.log('[MobiFlix] ✅ Notifications refreshed (3 API calls)');
   } catch (err) { console.error('[Notifications]', err); }
 }
 
@@ -944,9 +828,6 @@ function renderNotifications() {
   });
 }
 
-// ============================================================
-// USER PROFILE
-// ============================================================
 function openUserProfile() {
   closeAllPagesOnly();
   const page = document.getElementById('user-profile-page');
@@ -971,20 +852,15 @@ function closeUserProfile() {
   triggerHomeRefresh();
 }
 
-// ============================================================
-// DISPLAY FUNCTIONS
-// ============================================================
 function displayBanner(item) {
   bannerItem = item;
   const banner = document.getElementById('banner');
   const bannerImg = `${IMG_W1280}${item.backdrop_path || item.poster_path}`;
   banner.style.backgroundImage = `url(${bannerImg})`;
   document.getElementById('banner-title').textContent = item.title || item.name;
-
   const numericRating = (item.vote_average || 0).toFixed(1);
   const ratingEl = document.getElementById('banner-rating');
   if (ratingEl) ratingEl.innerHTML = '<i class="fa fa-star" style="color:#f5c518;"></i> <span style="color:#fff;font-weight:700;margin-left:4px;">' + numericRating + '</span>';
-
   const yearEl = document.getElementById('banner-year');
   if (yearEl) {
     const year = (item.release_date || item.first_air_date || '').slice(0, 4);
@@ -1018,9 +894,7 @@ function renderTop10(items, containerId, mediaType) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-
   const released = filterReleased(items);
-
   released.slice(0, 10).forEach(function(item, index) {
     if (!item.poster_path) return;
     if (mediaType) item.media_type = mediaType;
@@ -1050,7 +924,6 @@ function renderTop10(items, containerId, mediaType) {
 
     posterWrap.appendChild(img);
     posterWrap.appendChild(ratingBadge);
-
     wrapper.appendChild(number);
     wrapper.appendChild(posterWrap);
     container.appendChild(wrapper);
@@ -1061,7 +934,6 @@ function renderProviders() {
   const container = document.getElementById('providers-list');
   if (!container) return;
   container.innerHTML = '';
-
   STREAMING_PROVIDERS.forEach(function(provider) {
     const card = document.createElement('div');
     card.className = 'provider-card';
@@ -1072,22 +944,17 @@ function renderProviders() {
       card.style.background = '#000';
       card.style.borderColor = '#ff6a00';
       card.style.color = '#ff6a00';
-
       const logoWrap = document.createElement('div');
       logoWrap.className = 'vivamax-logo-wrap';
-
       const vivaText = document.createElement('span');
       vivaText.className = 'vivamax-viva';
       vivaText.textContent = 'VIVA';
-
       const maxText = document.createElement('span');
       maxText.className = 'vivamax-max';
       maxText.textContent = 'MAX';
-
       logoWrap.appendChild(vivaText);
       logoWrap.appendChild(maxText);
       card.appendChild(logoWrap);
-
       card.onclick = function() { openVivamaxPage(); };
       container.appendChild(card);
       return;
@@ -1130,9 +997,6 @@ function renderGenresInMore() {
   });
 }
 
-// ============================================================
-// FILTERS
-// ============================================================
 const FILTER_PANEL_MAP = {
   'view-all': 'view-all-filter-panel',
   'provider': 'provider-filter-panel',
@@ -1171,12 +1035,7 @@ function getFilterValues(pageKey) {
 
 function applyFilters(pageKey) {
   const filters = getFilterValues(pageKey);
-  const hasYear = !!filters.year;
-  const hasGenre = !!filters.genre;
-  const hasCountry = !!filters.country;
-  const hasSort = filters.sort && filters.sort !== 'popularity.desc';
-  const hasFilter = hasYear || hasGenre || hasCountry || hasSort;
-
+  const hasFilter = filters.year || filters.genre || filters.country || (filters.sort && filters.sort !== 'popularity.desc');
   if (!hasFilter) {
     alert('Please select at least one filter (Year, Genre, Country, or Sort By).');
     return;
@@ -1256,9 +1115,6 @@ function buildFilterParams(filters, mediaType) {
   return params;
 }
 
-// ============================================================
-// CLOSE FUNCTIONS
-// ============================================================
 function closeAllPagesOnly() {
   const pagesToClose = ['view-all-page', 'provider-page', 'my-list-page', 'more-page', 'search-modal', 'genre-page', 'ongoing-page', 'completed-page', 'vivamax-page', 'user-profile-page'];
   pagesToClose.forEach(function(id) {
@@ -1286,9 +1142,6 @@ function closeSearchModal() {
   triggerHomeRefresh();
 }
 
-// ============================================================
-// PAGE OPENERS
-// ============================================================
 function openVivamaxPage() {
   closeAllPagesOnly();
   const page = document.getElementById('vivamax-page');
@@ -1514,10 +1367,6 @@ async function loadCompletedPageBatch() {
   }
 }
 
-// ============================================================
-// ✅ PROVIDER BATCH OPTIMIZATION
-// 1 media type lang per batch (dating alternating)
-// ============================================================
 function openProviderPage(providerId, providerName, providerType) {
   closeAllPagesOnly();
   const page = document.getElementById('provider-page');
@@ -1554,9 +1403,6 @@ async function loadProviderBatch() {
     const sortBy = filters.sort || 'popularity.desc';
     if (typeof providerPageState.batchCount === 'undefined') providerPageState.batchCount = 0;
 
-    // ✅ OPTIMIZED: 1 media type per batch (movie muna, tapos tv)
-    // Dati: alternating bawat batch → doble requests
-    // Ngayon: movie pages 1-3, tapos tv pages 1-3, tapos movie ulit...
     const CYCLE_SIZE = 3;
     const cycleIndex = Math.floor(providerPageState.batchCount / CYCLE_SIZE);
     const mediaType = (cycleIndex % 2 === 0) ? 'movie' : 'tv';
@@ -1603,9 +1449,6 @@ async function loadProviderBatch() {
   }
 }
 
-// ============================================================
-// SHOW DETAILS
-// ============================================================
 function showDetails(item) {
   if (!item || !item.id) return;
   if (!item.media_type) {
@@ -1614,9 +1457,6 @@ function showDetails(item) {
   window.location.href = `details.html?id=${item.id}&type=${item.media_type}`;
 }
 
-// ============================================================
-// WATCHLIST
-// ============================================================
 function getWatchlist() {
   try { return JSON.parse(localStorage.getItem('mobiflix_watchlist')) || []; }
   catch (e) { return []; }
@@ -1626,25 +1466,47 @@ function saveWatchlist(list) {
 }
 
 // ============================================================
-// PLAY NOW
+// ✅ RELIABLE NEW TAB OPENER
 // ============================================================
-function playNow() {
-  if (!currentItem) return;
-  const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
-  const title = currentItem.title || currentItem.name || 'MobiFlix';
-  const year = (currentItem.release_date || currentItem.first_air_date || '').slice(0, 4);
-  let url;
-  if (isMovie) url = `player.html?type=movie&id=${currentItem.id}&title=${encodeURIComponent(title)}&year=${year}`;
-  else url = `player.html?type=tv&id=${currentItem.id}&title=${encodeURIComponent(title)}`;
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('landscape').catch(function() {});
-  }
-  window.location.href = url;
+function openNewTab(url) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(function() {
+    if (link.parentNode) link.parentNode.removeChild(link);
+  }, 100);
 }
 
 // ============================================================
-// MY LIST PAGE
+// ✅ PLAY NOW — 1st click: uplcm new tab / 2nd+: player.html
 // ============================================================
+function playNow() {
+  if (!currentItem) return;
+
+  const key = 'mobiflix_play_this_visit_' + currentItem.media_type + '_' + currentItem.id;
+  const hasClicked = sessionStorage.getItem(key) === 'true';
+
+  if (!hasClicked) {
+    sessionStorage.setItem(key, 'true');
+    openNewTab('https://uplcm.com/4/12083099');
+  } else {
+    const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
+    const title = currentItem.title || currentItem.name || 'MobiFlix';
+    const year = (currentItem.release_date || currentItem.first_air_date || '').slice(0, 4);
+    let url;
+    if (isMovie) url = `player.html?type=movie&id=${currentItem.id}&title=${encodeURIComponent(title)}&year=${year}`;
+    else url = `player.html?type=tv&id=${currentItem.id}&title=${encodeURIComponent(title)}`;
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(function() {});
+    }
+    window.location.href = url;
+  }
+}
+
 function openMyListPage() {
   closeAllPagesOnly();
   const page = document.getElementById('my-list-page');
@@ -1667,9 +1529,6 @@ function renderMyList() {
   });
 }
 
-// ============================================================
-// SEARCH
-// ============================================================
 function openSearchModal() {
   closeAllPagesOnly();
   const modal = document.getElementById('search-modal');
@@ -1752,9 +1611,6 @@ async function searchTMDB() {
   }, 300);
 }
 
-// ============================================================
-// BOTTOM NAV
-// ============================================================
 function setActiveNav(name) {
   document.querySelectorAll('.bottom-nav-item').forEach(function(el) { el.classList.remove('active'); });
   const items = document.querySelectorAll('.bottom-nav-item');
@@ -1777,9 +1633,6 @@ function goHome() {
   triggerHomeRefresh();
 }
 
-// ============================================================
-// MORE PAGE (Genre)
-// ============================================================
 function openMorePage() {
   closeAllPagesOnly();
   const page = document.getElementById('more-page');
@@ -1790,9 +1643,6 @@ function openMorePage() {
   pushLayer('more');
 }
 
-// ============================================================
-// VIEW ALL PAGE
-// ============================================================
 function openViewAll(key) {
   closeAllPagesOnly();
   const config = HOME_ROWS[key];
@@ -1897,9 +1747,6 @@ function viewAllScrollHandler() {
   }, 150);
 }
 
-// ============================================================
-// ✅ RENDER HOME FROM CACHE (0 API calls)
-// ============================================================
 function renderHomeFromCache(data) {
   if (!data) return;
   try {
@@ -1909,18 +1756,11 @@ function renderHomeFromCache(data) {
     if (data.kdrama) renderTop10(data.kdrama, 'top10-kdrama', 'tv');
     if (typeof renderContinueWatching === 'function') renderContinueWatching();
     if (typeof updateNotifBadge === 'function') updateNotifBadge();
-    console.log('[MobiFlix] ✅ Rendered from cache (0 API calls)');
-  } catch (err) {
-    console.error('[MobiFlix] Cache render error:', err);
-  }
+  } catch (err) { console.error('[MobiFlix] Cache render error:', err); }
 }
 
-// ============================================================
-// ✅ REFRESH HOME CONTENT (may cache save)
-// ============================================================
 async function refreshHomeContent() {
   try {
-    console.log('[MobiFlix] 🔄 Refreshing content...');
     const bannerTitle = document.getElementById('banner-title');
     if (bannerTitle) bannerTitle.textContent = 'Loading new content...';
 
@@ -1931,7 +1771,6 @@ async function refreshHomeContent() {
     if (tvRow) tvRow.innerHTML = '';
     if (kdramaRow) kdramaRow.innerHTML = '';
 
-    // ✅ Sunod-sunod na fetch
     const moviesData = await fetchTrendingPhilippines('movie', 1);
     let bannerItem = null;
     if (moviesData.results.length > 0) {
@@ -1950,7 +1789,6 @@ async function refreshHomeContent() {
     kdramaData.results.forEach(function(item) { item.media_type = 'tv'; });
     renderTop10(kdramaData.results, 'top10-kdrama', 'tv');
 
-    // ✅ SAVE SA CACHE
     saveHomeCache({
       banner: bannerItem,
       movies: moviesData.results,
@@ -1958,19 +1796,14 @@ async function refreshHomeContent() {
       kdrama: kdramaData.results
     });
 
-    // ✅ Notifications: 1 oras lang
     if (shouldGenerateNotifications()) {
       setTimeout(function() {
         generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
       }, 1500);
-    } else {
-      console.log('[MobiFlix] ⏭️ Notifications skipped (fresh pa)');
     }
 
     if (typeof renderContinueWatching === 'function') renderContinueWatching();
     if (typeof updateNotifBadge === 'function') updateNotifBadge();
-
-    console.log('[MobiFlix] ✅ Content refreshed successfully!');
   } catch (err) {
     console.error('[MobiFlix] ❌ Refresh error:', err);
     const bannerTitle = document.getElementById('banner-title');
@@ -1980,14 +1813,8 @@ async function refreshHomeContent() {
   }
 }
 
-// ============================================================
-// ✅ INIT (optimized, may cache-first strategy)
-// ============================================================
 async function init() {
   try {
-    console.log('[MobiFlix] Initializing...');
-
-    // ✅ Mabilis na rendering muna (UI)
     loadTheme();
     renderProviders();
     renderContinueWatching();
@@ -1997,16 +1824,11 @@ async function init() {
     const notifToggle = document.getElementById('notif-toggle');
     if (notifToggle) notifToggle.checked = isNotifEnabled();
 
-    // ✅ Snow effect pagkatapos ng UI
     setTimeout(createSnow, 300);
 
-    // ✅ CACHE-FIRST: Kung may cache pa, i-render agad (0 API calls)
     const cached = getHomeCache();
     if (cached) {
-      console.log('[MobiFlix] ✅ Using cached home content');
       renderHomeFromCache(cached);
-
-      // ✅ Notifications: 1 oras lang
       if (shouldGenerateNotifications()) {
         setTimeout(function() {
           generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
@@ -2014,9 +1836,6 @@ async function init() {
       }
       return;
     }
-
-    // ✅ Walang cache → fetch fresh
-    console.log('[MobiFlix] 📡 No cache, fetching fresh content...');
 
     const moviesData = await fetchTrendingPhilippines('movie', 1);
     let bannerItem = null;
@@ -2036,7 +1855,6 @@ async function init() {
     kdramaData.results.forEach(function(item) { item.media_type = 'tv'; });
     renderTop10(kdramaData.results, 'top10-kdrama', 'tv');
 
-    // ✅ SAVE SA CACHE
     saveHomeCache({
       banner: bannerItem,
       movies: moviesData.results,
@@ -2044,14 +1862,11 @@ async function init() {
       kdrama: kdramaData.results
     });
 
-    // ✅ Notifications
     if (shouldGenerateNotifications()) {
       setTimeout(function() {
         generateNotifications().catch(function(err) { console.error('[MobiFlix] Notif error:', err); });
       }, 1500);
     }
-
-    console.log('[MobiFlix] Ready.');
   } catch (err) { console.error('[MobiFlix] Init error:', err); }
 }
 
@@ -2081,7 +1896,6 @@ document.addEventListener('keydown', function(e) {
 
 function handleLogout() {
   if (confirm('Are you sure you want to log out?')) {
-    // ✅ Clear home cache para walang luma content sa ibang user
     clearHomeCache();
     logout();
     showLoginScreen();
