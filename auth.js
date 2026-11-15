@@ -1,86 +1,33 @@
 // ============================================
-//   MOBIFLIX LOGIN SYSTEM — OPTIMIZED v2
-//   Palitan mo lang yung USERS array para
-//   magdagdag / magpalit ng username & password
+//   MOBIFLIX AUTH — BYPASSED (NO LOGIN)
+//   Login removed — direct access to homepage
 // ============================================
 
-const USERS = [
-  { username: 'mobiflix', password: '7777' }
-];
-
-const SESSION_HOURS = 6;
-
-const AUTH_KEY = 'mobiflix_auth_session';
-const AUTH_TIME_KEY = 'mobiflix_auth_time';
-
-const CACHE_KEYS_TO_CLEAR = [
-  'mobiflix_home_cache',
-  'mobiflix_notif_last_gen',
-  'mobiflix_notifications',
-  'mobiflix_continue_watching',
-  'mobiflix_watch_history',
-  'mobiflix_episode_progress'
-];
-
+// ✅ Laging "logged in"
 function isLoggedIn() {
-  const session = localStorage.getItem(AUTH_KEY);
-  const time = localStorage.getItem(AUTH_TIME_KEY);
-  if (!session || !time) return false;
-
-  const now = Date.now();
-  const elapsed = now - parseInt(time, 10);
-  const maxAge = SESSION_HOURS * 60 * 60 * 1000;
-
-  if (elapsed > maxAge) {
-    logout();
-    return false;
-  }
   return true;
 }
 
+// ✅ No-op login (kung may tumawag man)
 function login(username, password) {
-  const user = USERS.find(function(u) {
-    return u.username === username && u.password === password;
-  });
-
-  if (!user) return false;
-
-  localStorage.setItem(AUTH_KEY, JSON.stringify({
-    username: user.username,
-    loginAt: Date.now()
-  }));
-  localStorage.setItem(AUTH_TIME_KEY, Date.now().toString());
   return true;
 }
 
+// ✅ No-op logout — walang cache clearing, walang redirect
 function logout() {
-  localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem(AUTH_TIME_KEY);
-
-  CACHE_KEYS_TO_CLEAR.forEach(function(key) {
-    try { localStorage.removeItem(key); } catch (e) {}
-  });
-
-  // ✅ Clear lahat ng play tracking flags
-  try {
-    Object.keys(localStorage).forEach(function(key) {
-      if (key.indexOf('mobiflix_played_') === 0) {
-        localStorage.removeItem(key);
-      }
-    });
-  } catch (e) {}
-
-  console.log('[MobiFlix] ✅ Logged out, cache cleared');
+  console.log('[MobiFlix] Auth bypassed — no logout needed');
 }
 
+// ✅ Itago ang login screen kung meron man
 function showLoginScreen() {
   const screen = document.getElementById('login-screen');
-  if (screen) screen.style.display = 'flex';
-  document.body.classList.add('locked');
+  if (screen) screen.style.display = 'none';
+  document.body.classList.remove('locked');
   const app = document.getElementById('app-content');
-  if (app) app.style.display = 'none';
+  if (app) app.style.display = '';
 }
 
+// ✅ Ipakita ang app content at i-hide ang login screen
 function hideLoginScreen() {
   const screen = document.getElementById('login-screen');
   if (screen) screen.style.display = 'none';
@@ -88,6 +35,7 @@ function hideLoginScreen() {
   const app = document.getElementById('app-content');
   if (app) app.style.display = '';
 
+  // ✅ I-trigger ang snow effect kung meron
   setTimeout(function() {
     if (typeof createSnow === 'function') {
       if (!document.getElementById('snow-container')) {
@@ -97,52 +45,23 @@ function hideLoginScreen() {
   }, 300);
 }
 
+// ✅ Walang confirm dialog — walang gagawin
 function handleLogout() {
-  if (confirm('Are you sure you want to log out?')) {
-    logout();
-    showLoginScreen();
-  }
+  // Bypassed — walang logout
 }
 
+// ✅ Sa load, laging itago ang login screen at ipakita ang app
 document.addEventListener('DOMContentLoaded', function() {
-  if (isLoggedIn()) {
-    hideLoginScreen();
-  } else {
-    showLoginScreen();
-  }
+  hideLoginScreen();
 
+  // Kung may login form man sa HTML, i-disable na lang
   const form = document.getElementById('login-form');
   if (form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
-      const errorEl = document.getElementById('login-error');
-
-      if (!username || !password) {
-        errorEl.textContent = 'Please enter your username and password.';
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      if (login(username, password)) {
-        errorEl.style.display = 'none';
-        hideLoginScreen();
-      } else {
-        errorEl.textContent = 'Incorrect username or password. Please try again.';
-        errorEl.style.display = 'block';
-        document.getElementById('login-password').value = '';
-      }
+      hideLoginScreen();
     });
   }
 });
 
-setInterval(function() {
-  if (!isLoggedIn()) {
-    const loginScreen = document.getElementById('login-screen');
-    if (loginScreen && loginScreen.style.display === 'none') {
-      showLoginScreen();
-      alert('Your session has expired. Please log in again.');
-    }
-  }
-}, 60000);
+// ✅ Walang session expiry interval — tinanggal para walang alert
