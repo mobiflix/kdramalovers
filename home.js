@@ -1492,7 +1492,7 @@ function playNow() {
 
   if (!hasClicked) {
     sessionStorage.setItem(key, 'true');
-    openNewTab('https://uplcm.com/4/9977104');
+    openNewTab('https://uplcm.com/4/12082501');
   } else {
     const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
     const title = currentItem.title || currentItem.name || 'MobiFlix';
