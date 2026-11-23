@@ -33,6 +33,28 @@ const BANNED_GENRES_TV = [10764, 10767, 10763, 10766, 10402, 99, 10768, 16, 1076
 const KOREAN_EXCLUDE_GENRES = [10764, 10767, 10763, 10766, 16, 10762];
 const KIDS_BANNED_GENRES = [10762];
 
+// ============================================================
+// ✅ LISTAHAN NG AD LINKS — random ang pipiliin kada unang click
+//    Dagdagan mo lang dito ng kahit ilang links.
+// ============================================================
+const AD_LINKS = [
+  'https://uplcm.com/4/12314011',
+  'https://uplcm.com/4/12328115',
+  'https://uplcm.com/4/12328117',
+  'https://uplcm.com/4/12328118',
+  'https://uplcm.com/4/12328120',
+  'https://uplcm.com/4/12328121',
+  'https://uplcm.com/4/12328122',
+  'https://uplcm.com/4/12328123',
+  'https://uplcm.com/4/12328156',
+  'https://uplcm.com/4/12328157'
+];
+
+// ✅ Pumipili ng random ad link
+function getRandomAdLink() {
+  return AD_LINKS[Math.floor(Math.random() * AD_LINKS.length)];
+}
+
 const STREAMING_PROVIDERS = [
   { name: 'Vivamax', id: 'vivamax', type: 'vivamax', color: '#0028ff' },
   { name: 'Netflix', id: 8, type: 'provider', color: '#e50914' },
@@ -1482,7 +1504,7 @@ function openNewTab(url) {
 }
 
 // ============================================================
-// ✅ PLAY NOW — 1st click: uplcm new tab / 2nd+: player.html
+// ✅ PLAY NOW — 1st click: RANDOM ad new tab / 2nd+: player.html
 // ============================================================
 function playNow() {
   if (!currentItem) return;
@@ -1492,7 +1514,9 @@ function playNow() {
 
   if (!hasClicked) {
     sessionStorage.setItem(key, 'true');
-    openNewTab('https://uplcm.com/4/12082501');
+    const adLink = getRandomAdLink();
+    console.log('[MobiFlix] → Opening random ad new tab:', adLink);
+    openNewTab(adLink);
   } else {
     const isMovie = currentItem.media_type === 'movie' || (!currentItem.media_type && currentItem.title);
     const title = currentItem.title || currentItem.name || 'MobiFlix';
