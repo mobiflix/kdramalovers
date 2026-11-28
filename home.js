@@ -38,8 +38,8 @@ const KIDS_BANNED_GENRES = [10762];
 //    Dagdagan mo lang dito ng kahit ilang links.
 // ============================================================
 const AD_LINKS = [
-  'https://uplcm.com/4/12328115',
-  'https://uplcm.com/4/12328122'
+  'https://uplcm.com/4/12082501',
+  'https://uplcm.com/4/12082501'
 ];
 
 // ✅ Pumipili ng random ad link
